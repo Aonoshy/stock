@@ -1,0 +1,17 @@
+# 股票API服务配置文件示例
+# 复制此文件为 config.yaml 并修改相应配置
+
+# 服务器配置
+server:
+  port: "8080"          # 服务端口
+  host: "0.0.0.0"       # 监听地址
+
+# Alltick API配置
+alltick:
+  api_key: "your-alltick-api-key-here"  # 替换为你的Alltick API密钥
+  base_url: "https://quote.alltick.co/quote-stock-b-api"  # API基础地址
+
+# 数据库配置 (未来扩展)
+database:
+  type: "memory"        # 数据库类型: memory, mysql, postgres, sqlite
+  url: ""               # 数据库连接URL

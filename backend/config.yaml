@@ -1,0 +1,11 @@
+server:
+  port: "8080"
+  host: "0.0.0.0"
+
+alltick:
+  api_key: "140d0ddec92a725d6473f5dad92aeb68-c-app"
+  base_url: "https://quote.alltick.co/quote-stock-b-api"
+
+database:
+  type: "memory"
+  url: ""

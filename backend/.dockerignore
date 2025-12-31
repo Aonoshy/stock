@@ -1,0 +1,30 @@
+# 忽略构建产物
+stock-api
+*.exe
+
+# 忽略Git文件
+.git
+.gitignore
+
+# 忽略IDE文件
+.vscode/
+.idea/
+
+# 忽略临时文件
+*.tmp
+*.log
+
+# 忽略文档文件
+*.md
+!README.md
+
+# 忽略测试文件
+*_test.go
+
+# 忽略Docker文件（避免递归复制）
+Dockerfile
+.dockerignore
+
+# 忽略本地环境文件
+.env
+.env.local
