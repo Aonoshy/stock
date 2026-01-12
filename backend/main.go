@@ -25,7 +25,24 @@ type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
+type TemplateResponse struct {
+	Templates []*service.StockTemplate `json:"templates"`
+}
+
+type CreateTemplateRequest struct {
+	ID          string   `json:"id"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Codes       []string `json:"codes"`
+}
+
+type TemplateQueryResponse struct {
+	Template *service.StockTemplate `json:"template"`
+	Data     map[string]float64     `json:"data"`
+}
+
 var stockService *service.StockService
+var templateService *service.TemplateService
 
 func main() {
 	// 加载配置
@@ -33,6 +50,9 @@ func main() {
 
 	// 初始化股票服务
 	stockService = service.NewStockService(cfg.GetAlltickAPIKey())
+
+	// 初始化模版服务
+	templateService = service.NewTemplateService()
 
 	// 设置Gin模式
 	gin.SetMode(gin.ReleaseMode)
@@ -57,6 +77,13 @@ func main() {
 	{
 		api.GET("/stock/:code", getStockPrice)
 		api.POST("/stocks/batch", getBatchStockPrices)
+
+		// 模版相关API
+		api.GET("/templates", getTemplates)
+		api.POST("/templates", createTemplate)
+		api.DELETE("/templates/:id", deleteTemplate)
+		api.GET("/templates/:id", getTemplate)
+		api.GET("/templates/:id/query", queryTemplateStocks)
 	}
 
 	// 健康检查端点
@@ -133,5 +160,97 @@ func getBatchStockPrices(c *gin.Context) {
 
 	c.JSON(http.StatusOK, BatchStockResponse{
 		Data: prices,
+	})
+}
+
+// 获取所有模版
+func getTemplates(c *gin.Context) {
+	templates := templateService.GetAllTemplates()
+	c.JSON(http.StatusOK, TemplateResponse{
+		Templates: templates,
+	})
+}
+
+// 获取指定模版
+func getTemplate(c *gin.Context) {
+	templateID := c.Param("id")
+
+	template, err := templateService.GetTemplate(templateID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, ErrorResponse{
+			Error: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, template)
+}
+
+// 创建新模版
+func createTemplate(c *gin.Context) {
+	var request CreateTemplateRequest
+
+	// 解析JSON请求体
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error: "请求格式错误: " + err.Error(),
+		})
+		return
+	}
+
+	template := &service.StockTemplate{
+		ID:          request.ID,
+		Name:        request.Name,
+		Description: request.Description,
+		Codes:       request.Codes,
+	}
+
+	if err := templateService.CreateTemplate(template); err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusCreated, template)
+}
+
+// 删除模版
+func deleteTemplate(c *gin.Context) {
+	templateID := c.Param("id")
+
+	if err := templateService.DeleteTemplate(templateID); err != nil {
+		c.JSON(http.StatusNotFound, ErrorResponse{
+			Error: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "模版已删除"})
+}
+
+// 根据模版查询股票价格
+func queryTemplateStocks(c *gin.Context) {
+	templateID := c.Param("id")
+
+	template, err := templateService.GetTemplate(templateID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, ErrorResponse{
+			Error: err.Error(),
+		})
+		return
+	}
+
+	prices, err := templateService.QueryTemplateStocks(templateID, stockService)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, TemplateQueryResponse{
+		Template: template,
+		Data:     prices,
 	})
 }

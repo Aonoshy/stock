@@ -30,6 +30,10 @@ WORKDIR /root/
 # 从构建阶段复制可执行文件
 COPY --from=builder /app/stock-api .
 
+# 复制配置文件
+COPY --from=builder /app/config.example.yaml ./config.example.yaml
+COPY --from=builder /app/config.yaml ./config.yaml
+
 # 暴露端口
 EXPOSE 8080
 
